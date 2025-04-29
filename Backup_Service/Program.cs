@@ -13,7 +13,7 @@ static class Program
     private const string COMPANY_NAME = "AZDev";
     private const string APP_NAME = "Backup_Service";
     private const string CONFIG_FILE = "config.json";
-    private const string ICON_PATH = "resources/icon.png";
+    private const string ICON_PATH = "resources/icon.ico";
 
     private static NotifyIcon trayIcon = new();
     private static string configPath = string.Empty;
@@ -259,6 +259,12 @@ static class Program
 
     private static void CreateAndStartNewSyncService()
     {
+        if (config == null)
+        {
+            Logger.Log(LogLevel.Error, "Cannot create sync service: Configuration is null");
+            return;
+        }
+
         syncService = new SyncService(config);
         syncService.Start();
         Logger.Log(LogLevel.Information, "Sync service started");
