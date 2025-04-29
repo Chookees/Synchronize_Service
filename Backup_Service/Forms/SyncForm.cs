@@ -1,5 +1,6 @@
 using Backup_Service.Services;
 using System.Text.Json;
+using Backup_Service.Models;
 
 namespace Backup_Service.Forms;
 
@@ -48,6 +49,12 @@ public class SyncForm : Form
         public bool PermanentlyIgnored { get; set; }
     }
 
+    /// <summary>
+    /// Initializes a new instance of the SyncForm class
+    /// </summary>
+    /// <param name="differences">List of differences to display</param>
+    /// <param name="sourceRoot">Source directory path</param>
+    /// <param name="targetRoot">Target directory path</param>
     public SyncForm(List<dynamic> differences, string sourceRoot, string targetRoot)
     {
         this.sourceRoot = sourceRoot;
@@ -419,6 +426,10 @@ public class SyncForm : Form
         }
     }
 
+    /// <summary>
+    /// Gets the selected items for synchronization
+    /// </summary>
+    /// <returns>List of selected differences</returns>
     public List<SyncItem> GetSelectedItems()
     {
         return syncItems.Where(item => item.Selected).ToList();

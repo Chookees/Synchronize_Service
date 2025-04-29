@@ -28,12 +28,18 @@ public partial class ConfigForm : Form
     private Label lblSource = new();
     private Label lblTarget = new();
     private Label lblPolling = new();
+    private Config? config;
 
+    /// <summary>
+    /// Initializes a new instance of the ConfigForm class
+    /// </summary>
+    /// <param name="configPath">Path to the configuration file</param>
     public ConfigForm(string configPath)
     {
         InitializeComponent();
         this.configPath = configPath;
         LoadConfig();
+        InitializeControls();
     }
 
     private void InitializeComponent()
@@ -134,54 +140,59 @@ public partial class ConfigForm : Form
         PerformLayout();
     }
 
+    /// <summary>
+    /// Loads the configuration from file
+    /// </summary>
     private void LoadConfig()
     {
         try
         {
             if (File.Exists(configPath))
             {
-                var config = LoadConfigFromFile();
-                if (config != null)
-                {
-                    ApplyConfigToForm(config);
-                }
+                var json = File.ReadAllText(configPath);
+                config = System.Text.Json.JsonSerializer.Deserialize<Config>(json);
+            }
+            else
+            {
+                config = new Config();
             }
         }
         catch (Exception ex)
         {
-            HandleConfigLoadError(ex);
+            Logger.Log(LogLevel.Error, $"Error loading configuration: {ex.Message}");
+            MessageBox.Show(
+                $"Error loading configuration: {ex.Message}",
+                "Error",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Error);
+            config = new Config();
         }
     }
 
-    private Config? LoadConfigFromFile()
+    /// <summary>
+    /// Initializes the form controls with configuration values
+    /// </summary>
+    private void InitializeControls()
     {
-        var json = File.ReadAllText(configPath);
-        return JsonSerializer.Deserialize<Config>(json);
-    }
+        if (config == null) return;
 
-    private void ApplyConfigToForm(Config config)
-    {
         txtSource.Text = config.Source;
         txtTarget.Text = config.Target;
-        chkAutoStart.Checked = config.AutoStart;
         txtPolling.Text = config.PollingInS.ToString();
+        chkAutoStart.Checked = config.AutoStart;
     }
 
-    private void HandleConfigLoadError(Exception ex)
-    {
-        Logger.Log(LogLevel.Error, $"Error loading configuration: {ex.Message}");
-        MessageBox.Show(
-            $"Error loading configuration: {ex.Message}",
-            "Error",
-            MessageBoxButtons.OK,
-            MessageBoxIcon.Error);
-    }
-
+    /// <summary>
+    /// Handles the Browse button click for source directory
+    /// </summary>
     private void BtnBrowseSource_Click(object? sender, EventArgs e)
     {
         SelectFolder(txtSource);
     }
 
+    /// <summary>
+    /// Handles the Browse button click for target directory
+    /// </summary>
     private void BtnBrowseTarget_Click(object? sender, EventArgs e)
     {
         SelectFolder(txtTarget);
@@ -196,6 +207,9 @@ public partial class ConfigForm : Form
         }
     }
 
+    /// <summary>
+    /// Handles the OK button click
+    /// </summary>
     private void btnSave_Click(object? sender, EventArgs e)
     {
         try

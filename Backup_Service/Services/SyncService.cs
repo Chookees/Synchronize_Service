@@ -18,9 +18,9 @@ public class SyncService
     private static bool isSyncWindowOpen = false;
 
     /// <summary>
-    /// Constructor for SyncService
+    /// Initializes a new instance of the SyncService class
     /// </summary>
-    /// <param name="config">Configuration object containing source and target paths</param>
+    /// <param name="config">The configuration containing source and target paths</param>
     public SyncService(Config config)
     {
         this.config = config;
@@ -50,8 +50,8 @@ public class SyncService
     /// <summary>
     /// Loads an icon from a file path
     /// </summary>
-    /// <param name="iconPath">Path to the icon file</param>
-    /// <returns>Loaded icon</returns>
+    /// <param name="iconPath">The path to the icon file</param>
+    /// <returns>The loaded icon</returns>
     private Icon LoadIconFromFile(string iconPath)
     {
         using var stream = new FileStream(iconPath, FileMode.Open, FileAccess.Read);
@@ -122,7 +122,7 @@ public class SyncService
     /// <summary>
     /// Validates if the source directory exists
     /// </summary>
-    /// <returns>True if the source directory exists</returns>
+    /// <returns>True if the source directory exists, false otherwise</returns>
     private bool ValidateSourceDirectory()
     {
         if (Directory.Exists(config.Source)) return true;
@@ -134,7 +134,7 @@ public class SyncService
     /// <summary>
     /// Validates if the target drive is available
     /// </summary>
-    /// <returns>True if the target drive is available</returns>
+    /// <returns>True if the target drive is available, false otherwise</returns>
     private bool ValidateTargetAvailability()
     {
         var targetDrive = Path.GetPathRoot(config.Target);
@@ -178,7 +178,7 @@ public class SyncService
     /// <summary>
     /// Finds differences between source and target directories
     /// </summary>
-    /// <returns>List of differences found</returns>
+    /// <returns>A list of differences found between the directories</returns>
     private async Task<List<dynamic>> FindSynchronizationDifferences()
     {
         var sourceFiles = await GetFilesAsync(config.Source);
@@ -193,8 +193,8 @@ public class SyncService
     /// <summary>
     /// Gets all files from a directory recursively
     /// </summary>
-    /// <param name="directory">Directory to search</param>
-    /// <returns>Array of file paths</returns>
+    /// <param name="directory">The directory to search</param>
+    /// <returns>An array of file paths</returns>
     private async Task<string[]> GetFilesAsync(string directory)
     {
         return await Task.Run(() =>
@@ -205,7 +205,7 @@ public class SyncService
     /// Finds differences from source to target
     /// </summary>
     /// <param name="sourceFiles">List of source files</param>
-    /// <returns>List of differences</returns>
+    /// <returns>A list of differences from source to target</returns>
     private async Task<List<dynamic>> FindSourceToTargetDifferences(string[] sourceFiles)
     {
         return await Task.Run(() => sourceFiles
@@ -219,7 +219,7 @@ public class SyncService
     /// Finds differences from target to source
     /// </summary>
     /// <param name="targetFiles">List of target files</param>
-    /// <returns>List of differences</returns>
+    /// <returns>A list of differences from target to source</returns>
     private async Task<List<dynamic>> FindTargetToSourceDifferences(string[] targetFiles)
     {
         return await Task.Run(() => targetFiles
@@ -232,11 +232,11 @@ public class SyncService
     /// <summary>
     /// Checks for differences between a source and target file
     /// </summary>
-    /// <param name="sourceFile">Source file path</param>
-    /// <param name="sourceRoot">Source root directory</param>
-    /// <param name="targetRoot">Target root directory</param>
+    /// <param name="sourceFile">The source file path</param>
+    /// <param name="sourceRoot">The source root directory</param>
+    /// <param name="targetRoot">The target root directory</param>
     /// <param name="isSourceToTarget">Direction of synchronization</param>
-    /// <returns>Difference object if differences found, null otherwise</returns>
+    /// <returns>A difference object if differences are found, null otherwise</returns>
     private dynamic? CheckFileDifference(string sourceFile, string sourceRoot, string targetRoot, bool isSourceToTarget)
     {
         var relativePath = Path.GetRelativePath(sourceRoot, sourceFile);
@@ -261,11 +261,11 @@ public class SyncService
     /// <summary>
     /// Creates a difference object for synchronization
     /// </summary>
-    /// <param name="source">Source file path</param>
-    /// <param name="target">Target file path</param>
-    /// <param name="action">Action to perform</param>
+    /// <param name="source">The source file path</param>
+    /// <param name="target">The target file path</param>
+    /// <param name="action">The action to perform</param>
     /// <param name="isSourceToTarget">Direction of synchronization</param>
-    /// <returns>Difference object</returns>
+    /// <returns>A difference object</returns>
     private dynamic CreateDifferenceObject(string source, string target, string action, bool isSourceToTarget)
     {
         var direction = isSourceToTarget ? "Source -> Target" : "Target -> Source";
@@ -323,7 +323,7 @@ public class SyncService
     /// <summary>
     /// Ensures the target directory exists for a file
     /// </summary>
-    /// <param name="targetPath">Target file path</param>
+    /// <param name="targetPath">The target file path</param>
     private async Task EnsureTargetDirectoryExists(string targetPath)
     {
         try
@@ -349,8 +349,8 @@ public class SyncService
     /// <summary>
     /// Copies a file from source to target
     /// </summary>
-    /// <param name="source">Source file path</param>
-    /// <param name="target">Target file path</param>
+    /// <param name="source">The source file path</param>
+    /// <param name="target">The target file path</param>
     private async Task CopyFileAsync(string source, string target)
     {
         try

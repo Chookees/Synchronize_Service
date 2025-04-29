@@ -21,6 +21,9 @@ static class Program
     private static SyncService? syncService;
     private static Icon? appIcon;
 
+    /// <summary>
+    /// Main entry point of the application
+    /// </summary>
     [STAThread]
     static void Main()
     {
@@ -35,6 +38,9 @@ static class Program
         }
     }
 
+    /// <summary>
+    /// Initializes the application with required settings and components
+    /// </summary>
     private static void InitializeApplication()
     {
         Application.SetHighDpiMode(HighDpiMode.SystemAware);
@@ -47,11 +53,18 @@ static class Program
         LoadConfig();
     }
 
+    /// <summary>
+    /// Starts the application's main message loop
+    /// </summary>
     private static void RunApplication()
     {
         Application.Run();
     }
 
+    /// <summary>
+    /// Handles critical errors by logging them and showing an error message
+    /// </summary>
+    /// <param name="ex">The exception that occurred</param>
     private static void HandleCriticalError(Exception ex)
     {
         Logger.Log(LogLevel.Error, $"Critical error: {ex.Message}");
@@ -63,6 +76,9 @@ static class Program
         Environment.Exit(1);
     }
 
+    /// <summary>
+    /// Loads the application icon from the specified path or uses the default system icon
+    /// </summary>
     private static void LoadAppIcon()
     {
         try
@@ -79,6 +95,11 @@ static class Program
         }
     }
 
+    /// <summary>
+    /// Loads an icon from a file
+    /// </summary>
+    /// <param name="iconPath">Path to the icon file</param>
+    /// <returns>The loaded icon</returns>
     private static Icon LoadIconFromFile(string iconPath)
     {
         using var stream = new FileStream(iconPath, FileMode.Open, FileAccess.Read);
@@ -86,6 +107,9 @@ static class Program
         return Icon.FromHandle(bitmap.GetHicon());
     }
 
+    /// <summary>
+    /// Initializes the application data directory and configuration path
+    /// </summary>
     private static void InitializeAppData()
     {
         var appDataPath = GetAppDataPath();
@@ -93,6 +117,10 @@ static class Program
         configPath = Path.Combine(appDataPath, CONFIG_FILE);
     }
 
+    /// <summary>
+    /// Gets the path to the application data directory
+    /// </summary>
+    /// <returns>Path to the application data directory</returns>
     private static string GetAppDataPath()
     {
         return Path.Combine(
@@ -101,6 +129,10 @@ static class Program
             APP_NAME);
     }
 
+    /// <summary>
+    /// Ensures that a directory exists, creating it if necessary
+    /// </summary>
+    /// <param name="path">Path to the directory</param>
     private static void EnsureDirectoryExists(string path)
     {
         if (!Directory.Exists(path))
@@ -110,6 +142,9 @@ static class Program
         }
     }
 
+    /// <summary>
+    /// Initializes the system tray icon with the application icon and context menu
+    /// </summary>
     private static void InitializeTrayIcon()
     {
         try
@@ -126,6 +161,9 @@ static class Program
         }
     }
 
+    /// <summary>
+    /// Initializes the context menu for the system tray icon
+    /// </summary>
     private static void InitializeContextMenu()
     {
         var contextMenu = new ContextMenuStrip();
@@ -135,6 +173,11 @@ static class Program
         trayIcon.ContextMenuStrip = contextMenu;
     }
 
+    /// <summary>
+    /// Shows the log file in the default text editor
+    /// </summary>
+    /// <param name="sender">Event sender</param>
+    /// <param name="e">Event arguments</param>
     private static void ShowLog(object? sender, EventArgs e)
     {
         try
@@ -155,6 +198,10 @@ static class Program
         }
     }
 
+    /// <summary>
+    /// Gets the path to today's log file
+    /// </summary>
+    /// <returns>Path to the log file</returns>
     private static string GetLogFilePath()
     {
         return Path.Combine(
@@ -162,6 +209,10 @@ static class Program
             $"Service_Log_{DateTime.Now:ddMMyyyy}.log");
     }
 
+    /// <summary>
+    /// Opens a log file in the default text editor
+    /// </summary>
+    /// <param name="logPath">Path to the log file</param>
     private static void OpenLogFile(string logPath)
     {
         System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
@@ -171,6 +222,9 @@ static class Program
         });
     }
 
+    /// <summary>
+    /// Shows a message when no log file is found
+    /// </summary>
     private static void ShowNoLogFileMessage()
     {
         MessageBox.Show(
@@ -180,6 +234,10 @@ static class Program
             MessageBoxIcon.Information);
     }
 
+    /// <summary>
+    /// Handles errors that occur when opening the log file
+    /// </summary>
+    /// <param name="ex">The exception that occurred</param>
     private static void HandleLogOpenError(Exception ex)
     {
         Logger.Log(LogLevel.Error, $"Error opening log: {ex.Message}");
@@ -190,6 +248,9 @@ static class Program
             MessageBoxIcon.Error);
     }
 
+    /// <summary>
+    /// Loads the configuration from file or shows the configuration form if no config exists
+    /// </summary>
     private static void LoadConfig()
     {
         try
@@ -209,6 +270,9 @@ static class Program
         }
     }
 
+    /// <summary>
+    /// Loads an existing configuration from file
+    /// </summary>
     private static void LoadExistingConfig()
     {
         var json = File.ReadAllText(configPath);
@@ -230,12 +294,19 @@ static class Program
         }
     }
 
+    /// <summary>
+    /// Handles errors that occur when loading the configuration
+    /// </summary>
+    /// <param name="ex">The exception that occurred</param>
     private static void HandleConfigLoadError(Exception ex)
     {
         Logger.Log(LogLevel.Error, $"Error loading configuration: {ex.Message}");
         ShowConfig(null, EventArgs.Empty);
     }
 
+    /// <summary>
+    /// Starts the synchronization service with the current configuration
+    /// </summary>
     private static void StartSyncService()
     {
         if (config == null)
@@ -248,6 +319,9 @@ static class Program
         CreateAndStartNewSyncService();
     }
 
+    /// <summary>
+    /// Stops the existing synchronization service if it exists
+    /// </summary>
     private static void StopExistingSyncService()
     {
         if (syncService != null)
@@ -257,6 +331,9 @@ static class Program
         }
     }
 
+    /// <summary>
+    /// Creates and starts a new synchronization service
+    /// </summary>
     private static void CreateAndStartNewSyncService()
     {
         if (config == null)
@@ -270,6 +347,11 @@ static class Program
         Logger.Log(LogLevel.Information, "Sync service started");
     }
 
+    /// <summary>
+    /// Shows the configuration form and handles the result
+    /// </summary>
+    /// <param name="sender">Event sender</param>
+    /// <param name="e">Event arguments</param>
     private static void ShowConfig(object? sender, EventArgs e)
     {
         try
@@ -287,6 +369,10 @@ static class Program
         }
     }
 
+    /// <summary>
+    /// Handles errors that occur in the configuration form
+    /// </summary>
+    /// <param name="ex">The exception that occurred</param>
     private static void HandleConfigFormError(Exception ex)
     {
         Logger.Log(LogLevel.Error, $"Error in configuration form: {ex.Message}");
@@ -297,6 +383,9 @@ static class Program
             MessageBoxIcon.Error);
     }
 
+    /// <summary>
+    /// Saves the current configuration to file
+    /// </summary>
     private static void SaveConfig()
     {
         try
@@ -321,6 +410,10 @@ static class Program
         }
     }
 
+    /// <summary>
+    /// Handles errors that occur when saving the configuration
+    /// </summary>
+    /// <param name="ex">The exception that occurred</param>
     private static void HandleConfigSaveError(Exception ex)
     {
         Logger.Log(LogLevel.Error, $"Error saving configuration: {ex.Message}");
@@ -331,6 +424,11 @@ static class Program
             MessageBoxIcon.Error);
     }
 
+    /// <summary>
+    /// Exits the application, stopping the sync service and cleaning up resources
+    /// </summary>
+    /// <param name="sender">Event sender</param>
+    /// <param name="e">Event arguments</param>
     private static void ExitApplication(object? sender, EventArgs e)
     {
         try
