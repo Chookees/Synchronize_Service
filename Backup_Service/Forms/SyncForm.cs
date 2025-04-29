@@ -4,7 +4,7 @@ using System.Text.Json;
 namespace Backup_Service.Forms;
 
 /// <summary>
-/// Formular zur Anzeige und Verwaltung der zu synchronisierenden Dateien
+/// Form for displaying and managing files to be synchronized
 /// </summary>
 public class SyncForm : Form
 {
@@ -26,7 +26,7 @@ public class SyncForm : Form
     private readonly string targetRoot;
 
     /// <summary>
-    /// Repräsentiert eine zu synchronisierende Datei
+    /// Represents a file to be synchronized
     /// </summary>
     public class SyncItem
     {
@@ -39,7 +39,7 @@ public class SyncForm : Form
     }
 
     /// <summary>
-    /// Repräsentiert eine ignorierte Datei
+    /// Represents an ignored file
     /// </summary>
     public class IgnoredFile
     {
@@ -81,7 +81,7 @@ public class SyncForm : Form
 
     private void ConfigureForm()
     {
-        Text = "Synchronisierung";
+        Text = "Synchronization";
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         MinimizeBox = false;
@@ -108,35 +108,35 @@ public class SyncForm : Form
         dataGridView.Columns.Add(new DataGridViewCheckBoxColumn
         {
             Name = "Selected",
-            HeaderText = "Auswahl",
+            HeaderText = "Select",
             Width = 50
         });
 
         dataGridView.Columns.Add(new DataGridViewTextBoxColumn
         {
             Name = "FileName",
-            HeaderText = "Datei",
+            HeaderText = "File",
             ReadOnly = true
         });
 
         dataGridView.Columns.Add(new DataGridViewTextBoxColumn
         {
             Name = "Source",
-            HeaderText = "Von",
+            HeaderText = "From",
             ReadOnly = true
         });
 
         dataGridView.Columns.Add(new DataGridViewTextBoxColumn
         {
             Name = "Target",
-            HeaderText = "Zu",
+            HeaderText = "To",
             ReadOnly = true
         });
 
         dataGridView.Columns.Add(new DataGridViewTextBoxColumn
         {
             Name = "Reason",
-            HeaderText = "Grund",
+            HeaderText = "Reason",
             ReadOnly = true
         });
     }
@@ -149,14 +149,14 @@ public class SyncForm : Form
 
     private void InitializeSyncButton()
     {
-        btnSync.Text = "Synchronisiere alle";
+        btnSync.Text = "Synchronize all";
         btnSync.Width = BUTTON_WIDTH;
         btnSync.Click += BtnSync_Click;
     }
 
     private void InitializeSelectAllButton()
     {
-        btnSelectAll.Text = "Alle auswählen";
+        btnSelectAll.Text = "Select all";
         btnSelectAll.Width = BUTTON_WIDTH;
         btnSelectAll.Margin = new Padding(0, 0, BUTTON_MARGIN, 0);
         btnSelectAll.Click += BtnSelectAll_Click;
@@ -235,7 +235,7 @@ public class SyncForm : Form
             FileName = Path.GetFileName(diff.Source),
             Source = diff.Source,
             Target = diff.Target,
-            Reason = diff.Action.Replace("Source", "Quelle").Replace("Target", "Ziel"),
+            Reason = diff.Action.Replace("Source", "From").Replace("Target", "To"),
             Selected = true,
             LastModified = File.GetLastWriteTime(diff.Source)
         });
@@ -263,11 +263,11 @@ public class SyncForm : Form
 
     private void UpdatePathCells(int rowIndex, SyncItem item)
     {
-        if (item.Reason.Contains("Quelle -> Ziel"))
+        if (item.Reason.Contains("From -> To"))
         {
             UpdateSourceToTargetPaths(rowIndex, item);
         }
-        else if (item.Reason.Contains("Ziel -> Quelle"))
+        else if (item.Reason.Contains("To -> From"))
         {
             UpdateTargetToSourcePaths(rowIndex, item);
         }
@@ -279,14 +279,14 @@ public class SyncForm : Form
 
     private void UpdateSourceToTargetPaths(int rowIndex, SyncItem item)
     {
-        UpdatePathCell(rowIndex, "Source", sourceRoot, item.Source, "Quelle");
-        UpdatePathCell(rowIndex, "Target", targetRoot, item.Target, "Ziel");
+        UpdatePathCell(rowIndex, "Source", sourceRoot, item.Source, "From");
+        UpdatePathCell(rowIndex, "Target", targetRoot, item.Target, "To");
     }
 
     private void UpdateTargetToSourcePaths(int rowIndex, SyncItem item)
     {
-        UpdatePathCell(rowIndex, "Source", targetRoot, item.Source, "Ziel");
-        UpdatePathCell(rowIndex, "Target", sourceRoot, item.Target, "Quelle");
+        UpdatePathCell(rowIndex, "Source", targetRoot, item.Source, "To");
+        UpdatePathCell(rowIndex, "Target", sourceRoot, item.Target, "From");
     }
 
     private void UpdatePathCell(int rowIndex, string columnName, string root, string fullPath, string prefix)
@@ -316,7 +316,7 @@ public class SyncForm : Form
         }
         catch (Exception ex)
         {
-            Logger.Log(LogLevel.Error, $"Fehler beim Laden der ignorierten Dateien: {ex.Message}");
+            Logger.Log(LogLevel.Error, $"Error loading ignored files: {ex.Message}");
             return new List<IgnoredFile>();
         }
     }
@@ -333,8 +333,8 @@ public class SyncForm : Form
         }
         catch (Exception ex)
         {
-            Logger.Log(LogLevel.Error, $"Fehler beim Speichern der ignorierten Dateien: {ex.Message}");
-            ShowError("Fehler", "Fehler beim Speichern der ignorierten Dateien.");
+            Logger.Log(LogLevel.Error, $"Error saving ignored files: {ex.Message}");
+            ShowError("Error", "Error saving ignored files.");
         }
     }
 
@@ -362,7 +362,7 @@ public class SyncForm : Form
         }
         catch (Exception ex)
         {
-            ShowError("Fehler", $"Fehler beim Auswählen der Dateien: {ex.Message}");
+            ShowError("Error", $"Error selecting files: {ex.Message}");
         }
     }
 
@@ -395,8 +395,8 @@ public class SyncForm : Form
     {
         var selectedCount = syncItems.Count(item => item.Selected);
         btnSync.Text = selectedCount == syncItems.Count
-            ? "Synchronisiere alle"
-            : $"Synchronisiere {selectedCount} von {syncItems.Count}";
+            ? "Synchronize all"
+            : $"Synchronize {selectedCount} of {syncItems.Count}";
     }
 
     private void BtnSync_Click(object? sender, EventArgs e)
@@ -406,7 +406,7 @@ public class SyncForm : Form
             var selectedItems = GetSelectedItems();
             if (selectedItems.Count == 0)
             {
-                ShowError("Warnung", "Bitte wählen Sie mindestens eine Datei aus.");
+                ShowError("Warning", "Please select at least one file.");
                 return;
             }
 
@@ -415,7 +415,7 @@ public class SyncForm : Form
         }
         catch (Exception ex)
         {
-            ShowError("Fehler", $"Fehler beim Starten der Synchronisation: {ex.Message}");
+            ShowError("Error", $"Error starting synchronization: {ex.Message}");
         }
     }
 

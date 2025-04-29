@@ -11,7 +11,7 @@
     <Authors>AZDev</Authors>
     <Company>AZDev</Company>
     <Product>Backup Service</Product>
-    <Description>Ein Service zur automatischen Synchronisation von Dateien</Description>
+    <Description>A service for automatic file synchronization</Description>
     <Copyright>Copyright © 2024 AZDev</Copyright>
   </PropertyGroup>
 

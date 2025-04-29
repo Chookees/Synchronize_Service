@@ -5,7 +5,7 @@ using System.Text.Json;
 namespace Backup_Service.Forms;
 
 /// <summary>
-/// Formular zur Konfiguration des Backup-Services
+/// Form for configuring the backup service
 /// </summary>
 public partial class ConfigForm : Form
 {
@@ -46,9 +46,9 @@ public partial class ConfigForm : Form
 
     private void InitializeLabels()
     {
-        InitializeLabel(lblSource, "Quellpfad:", 15);
-        InitializeLabel(lblTarget, "Zielpfad:", 45);
-        InitializeLabel(lblPolling, "Intervall (Sek.):", 105);
+        InitializeLabel(lblSource, "Source Path:", 15);
+        InitializeLabel(lblTarget, "Target Path:", 45);
+        InitializeLabel(lblPolling, "Interval (Sec.):", 105);
     }
 
     private void InitializeLabel(Label label, string text, int top)
@@ -75,8 +75,8 @@ public partial class ConfigForm : Form
 
     private void InitializeButtons()
     {
-        InitializeBrowseButton(btnBrowseSource, "Durchsuchen", 14, BtnBrowseSource_Click);
-        InitializeBrowseButton(btnBrowseTarget, "Durchsuchen", 44, BtnBrowseTarget_Click);
+        InitializeBrowseButton(btnBrowseSource, "Browse", 14, BtnBrowseSource_Click);
+        InitializeBrowseButton(btnBrowseTarget, "Browse", 44, BtnBrowseTarget_Click);
         InitializeSaveButton();
     }
 
@@ -92,7 +92,7 @@ public partial class ConfigForm : Form
     {
         btnSave.Location = new System.Drawing.Point(HORIZONTAL_SPACING, 140);
         btnSave.Size = new System.Drawing.Size(FORM_WIDTH - (2 * HORIZONTAL_SPACING), 23);
-        btnSave.Text = "Speichern";
+        btnSave.Text = "Save";
         btnSave.Click += btnSave_Click;
     }
 
@@ -107,7 +107,7 @@ public partial class ConfigForm : Form
     {
         chkAutoStart.Location = new System.Drawing.Point(100, 75);
         chkAutoStart.Size = new System.Drawing.Size(200, 20);
-        chkAutoStart.Text = "Start mit Windows";
+        chkAutoStart.Text = "Start with Windows";
         chkAutoStart.Name = "chkAutoStart";
     }
 
@@ -129,7 +129,7 @@ public partial class ConfigForm : Form
         MinimizeBox = false;
         Name = "ConfigForm";
         StartPosition = FormStartPosition.CenterScreen;
-        Text = "Backup Service Konfiguration";
+        Text = "Backup Service Configuration";
         ResumeLayout(false);
         PerformLayout();
     }
@@ -169,10 +169,10 @@ public partial class ConfigForm : Form
 
     private void HandleConfigLoadError(Exception ex)
     {
-        Logger.Log(LogLevel.Error, $"Fehler beim Laden der Konfiguration: {ex.Message}");
+        Logger.Log(LogLevel.Error, $"Error loading configuration: {ex.Message}");
         MessageBox.Show(
-            $"Fehler beim Laden der Konfiguration: {ex.Message}",
-            "Fehler",
+            $"Error loading configuration: {ex.Message}",
+            "Error",
             MessageBoxButtons.OK,
             MessageBoxIcon.Error);
     }
@@ -208,7 +208,7 @@ public partial class ConfigForm : Form
             // Update Windows startup setting
             StartupManager.StartWithWindows = config.AutoStart;
 
-            Logger.Log(LogLevel.Information, "Konfiguration erfolgreich gespeichert");
+            Logger.Log(LogLevel.Information, "Configuration saved successfully");
             DialogResult = DialogResult.OK;
             Close();
         }
@@ -222,43 +222,43 @@ public partial class ConfigForm : Form
     {
         if (!int.TryParse(txtPolling.Text, out int polling))
         {
-            ShowValidationError("Bitte geben Sie eine gültige Zahl für das Polling-Intervall ein.");
+            ShowValidationError("Please enter a valid number for the polling interval.");
             return false;
         }
 
         if (polling <= 0)
         {
-            ShowValidationError("Das Polling-Intervall muss größer als 0 sein.");
+            ShowValidationError("The polling interval must be greater than 0.");
             return false;
         }
 
         if (string.IsNullOrWhiteSpace(txtSource.Text))
         {
-            ShowValidationError("Bitte wählen Sie ein Quellverzeichnis aus.");
+            ShowValidationError("Please select a source directory.");
             return false;
         }
 
         if (!Directory.Exists(txtSource.Text))
         {
-            ShowValidationError("Das Quellverzeichnis existiert nicht.");
+            ShowValidationError("The source directory does not exist.");
             return false;
         }
 
         if (string.IsNullOrWhiteSpace(txtTarget.Text))
         {
-            ShowValidationError("Bitte wählen Sie ein Zielverzeichnis aus.");
+            ShowValidationError("Please select a target directory.");
             return false;
         }
 
         if (!Directory.Exists(Path.GetDirectoryName(txtTarget.Text)))
         {
-            ShowValidationError("Das übergeordnete Zielverzeichnis existiert nicht.");
+            ShowValidationError("The parent target directory does not exist.");
             return false;
         }
 
         if (txtSource.Text.Equals(txtTarget.Text, StringComparison.OrdinalIgnoreCase))
         {
-            ShowValidationError("Quell- und Zielverzeichnis dürfen nicht identisch sein.");
+            ShowValidationError("Source and target directories must not be identical.");
             return false;
         }
 
@@ -267,10 +267,10 @@ public partial class ConfigForm : Form
 
     private void ShowValidationError(string message)
     {
-        Logger.Log(LogLevel.Warning, $"Validierungsfehler: {message}");
+        Logger.Log(LogLevel.Warning, $"Validation error: {message}");
         MessageBox.Show(
             message,
-            "Validierungsfehler",
+            "Validation Error",
             MessageBoxButtons.OK,
             MessageBoxIcon.Warning);
     }
@@ -297,10 +297,10 @@ public partial class ConfigForm : Form
 
     private void HandleConfigSaveError(Exception ex)
     {
-        Logger.Log(LogLevel.Error, $"Fehler beim Speichern der Konfiguration: {ex.Message}");
+        Logger.Log(LogLevel.Error, $"Error saving configuration: {ex.Message}");
         MessageBox.Show(
-            $"Fehler beim Speichern der Konfiguration: {ex.Message}",
-            "Fehler",
+            $"Error saving configuration: {ex.Message}",
+            "Error",
             MessageBoxButtons.OK,
             MessageBoxIcon.Error);
     }
