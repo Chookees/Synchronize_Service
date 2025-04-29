@@ -1,3 +1,4 @@
+using Backup_Service.Services;
 using System.Text.Json;
 
 namespace Backup_Service.Forms;
@@ -305,11 +306,17 @@ public class SyncForm : Form
     {
         try
         {
+            if (!File.Exists(ignoredFilesPath))
+            {
+                return new List<IgnoredFile>();
+            }
+
             var json = File.ReadAllText(ignoredFilesPath);
             return JsonSerializer.Deserialize<List<IgnoredFile>>(json) ?? new List<IgnoredFile>();
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Log(LogLevel.Error, $"Fehler beim Laden der ignorierten Dateien: {ex.Message}");
             return new List<IgnoredFile>();
         }
     }
@@ -318,36 +325,52 @@ public class SyncForm : Form
     {
         try
         {
-            var json = JsonSerializer.Serialize(ignoredFiles, new JsonSerializerOptions { WriteIndented = true });
+            var json = JsonSerializer.Serialize(ignoredFiles, new JsonSerializerOptions
+            {
+                WriteIndented = true
+            });
             File.WriteAllText(ignoredFilesPath, json);
         }
         catch (Exception ex)
         {
-            ShowError("Fehler beim Speichern der ignorierten Dateien", ex.Message);
+            Logger.Log(LogLevel.Error, $"Fehler beim Speichern der ignorierten Dateien: {ex.Message}");
+            ShowError("Fehler", "Fehler beim Speichern der ignorierten Dateien.");
         }
     }
 
     private void ShowError(string title, string message)
     {
-        MessageBox.Show(message, title, MessageBoxButtons.OK, MessageBoxIcon.Error);
+        Logger.Log(LogLevel.Error, $"{title}: {message}");
+        MessageBox.Show(
+            message,
+            title,
+            MessageBoxButtons.OK,
+            MessageBoxIcon.Error);
     }
 
     private void BtnSelectAll_Click(object? sender, EventArgs e)
     {
-        var allSelected = !syncItems.All(item => item.Selected);
-        foreach (var item in syncItems)
+        try
         {
-            item.Selected = allSelected;
+            var allSelected = syncItems.All(item => item.Selected);
+            foreach (var item in syncItems)
+            {
+                item.Selected = !allSelected;
+            }
+            UpdateDataGridView();
+            UpdateSyncButtonText();
         }
-        UpdateDataGridView();
-        UpdateSyncButtonText();
+        catch (Exception ex)
+        {
+            ShowError("Fehler", $"Fehler beim Auswählen der Dateien: {ex.Message}");
+        }
     }
 
     private void UpdateDataGridView()
     {
         for (int i = 0; i < syncItems.Count; i++)
         {
-            dataGridView.Rows[i].Cells["Selected"].Value = syncItems[i].Selected;
+            UpdateDataGridViewRow(i, syncItems[i]);
         }
     }
 
@@ -378,8 +401,22 @@ public class SyncForm : Form
 
     private void BtnSync_Click(object? sender, EventArgs e)
     {
-        DialogResult = DialogResult.OK;
-        Close();
+        try
+        {
+            var selectedItems = GetSelectedItems();
+            if (selectedItems.Count == 0)
+            {
+                ShowError("Warnung", "Bitte wählen Sie mindestens eine Datei aus.");
+                return;
+            }
+
+            DialogResult = DialogResult.OK;
+            Close();
+        }
+        catch (Exception ex)
+        {
+            ShowError("Fehler", $"Fehler beim Starten der Synchronisation: {ex.Message}");
+        }
     }
 
     public List<SyncItem> GetSelectedItems()

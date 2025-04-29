@@ -238,9 +238,27 @@ public partial class ConfigForm : Form
             return false;
         }
 
+        if (!Directory.Exists(txtSource.Text))
+        {
+            ShowValidationError("Das Quellverzeichnis existiert nicht.");
+            return false;
+        }
+
         if (string.IsNullOrWhiteSpace(txtTarget.Text))
         {
             ShowValidationError("Bitte wählen Sie ein Zielverzeichnis aus.");
+            return false;
+        }
+
+        if (!Directory.Exists(Path.GetDirectoryName(txtTarget.Text)))
+        {
+            ShowValidationError("Das übergeordnete Zielverzeichnis existiert nicht.");
+            return false;
+        }
+
+        if (txtSource.Text.Equals(txtTarget.Text, StringComparison.OrdinalIgnoreCase))
+        {
+            ShowValidationError("Quell- und Zielverzeichnis dürfen nicht identisch sein.");
             return false;
         }
 
@@ -249,15 +267,20 @@ public partial class ConfigForm : Form
 
     private void ShowValidationError(string message)
     {
-        MessageBox.Show(message, "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        Logger.Log(LogLevel.Warning, $"Validierungsfehler: {message}");
+        MessageBox.Show(
+            message,
+            "Validierungsfehler",
+            MessageBoxButtons.OK,
+            MessageBoxIcon.Warning);
     }
 
     private Config CreateConfigFromForm()
     {
         return new Config
         {
-            Source = txtSource.Text,
-            Target = txtTarget.Text,
+            Source = txtSource.Text.Trim(),
+            Target = txtTarget.Text.Trim(),
             AutoStart = chkAutoStart.Checked,
             PollingInS = int.Parse(txtPolling.Text)
         };
@@ -265,7 +288,10 @@ public partial class ConfigForm : Form
 
     private void SaveConfig(Config config)
     {
-        var json = JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true });
+        var json = JsonSerializer.Serialize(config, new JsonSerializerOptions
+        {
+            WriteIndented = true
+        });
         File.WriteAllText(configPath, json);
     }
 

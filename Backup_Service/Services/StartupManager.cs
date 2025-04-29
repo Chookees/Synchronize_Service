@@ -28,8 +28,14 @@ public static class StartupManager
     {
         try
         {
-            using var key = Registry.CurrentUser.OpenSubKey(REGISTRY_RUN_KEY);
-            var value = key?.GetValue(APP_NAME);
+            using var key = Registry.CurrentUser.OpenSubKey(REGISTRY_RUN_KEY, false);
+            if (key == null)
+            {
+                Logger.Log(LogLevel.Warning, "Registry key not found");
+                return false;
+            }
+
+            var value = key.GetValue(APP_NAME);
             return value != null;
         }
         catch (Exception ex)
@@ -48,7 +54,11 @@ public static class StartupManager
         try
         {
             using var key = Registry.CurrentUser.OpenSubKey(REGISTRY_RUN_KEY, true);
-            if (key == null) return;
+            if (key == null)
+            {
+                Logger.Log(LogLevel.Error, "Failed to open registry key for writing");
+                return;
+            }
 
             if (enable)
             {
@@ -56,14 +66,27 @@ public static class StartupManager
                     AppDomain.CurrentDomain.BaseDirectory,
                     $"{APP_NAME}.exe");
 
+                if (!File.Exists(exePath))
+                {
+                    Logger.Log(LogLevel.Error, $"Executable not found at path: {exePath}");
+                    return;
+                }
+
                 key.SetValue(APP_NAME, exePath);
                 Logger.Log(LogLevel.Information, "Application set to start with Windows");
             }
             else
             {
-                key.DeleteValue(APP_NAME, false);
-                Logger.Log(LogLevel.Information, "Application removed from Windows startup");
+                if (key.GetValue(APP_NAME) != null)
+                {
+                    key.DeleteValue(APP_NAME, false);
+                    Logger.Log(LogLevel.Information, "Application removed from Windows startup");
+                }
             }
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            Logger.Log(LogLevel.Error, $"Access denied when modifying registry: {ex.Message}");
         }
         catch (Exception ex)
         {

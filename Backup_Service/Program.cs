@@ -6,7 +6,7 @@ using System.Text.Json;
 namespace Backup_Service;
 
 /// <summary>
-/// Hauptklasse der Anwendung
+/// Main application class
 /// </summary>
 static class Program
 {
@@ -54,10 +54,10 @@ static class Program
 
     private static void HandleCriticalError(Exception ex)
     {
-        Logger.Log(LogLevel.Error, $"Kritischer Fehler: {ex.Message}");
+        Logger.Log(LogLevel.Error, $"Critical error: {ex.Message}");
         MessageBox.Show(
-            $"Ein kritischer Fehler ist aufgetreten: {ex.Message}\nDie Anwendung wird beendet.",
-            "Kritischer Fehler",
+            $"A critical error occurred: {ex.Message}\nThe application will be terminated.",
+            "Critical Error",
             MessageBoxButtons.OK,
             MessageBoxIcon.Error);
         Environment.Exit(1);
@@ -74,7 +74,7 @@ static class Program
         }
         catch (Exception ex)
         {
-            Logger.Log(LogLevel.Error, $"Fehler beim Laden des Icons: {ex.Message}");
+            Logger.Log(LogLevel.Error, $"Error loading icon: {ex.Message}");
             appIcon = SystemIcons.Application;
         }
     }
@@ -106,7 +106,7 @@ static class Program
         if (!Directory.Exists(path))
         {
             Directory.CreateDirectory(path);
-            Logger.Log(LogLevel.Information, "AppData-Verzeichnis erstellt");
+            Logger.Log(LogLevel.Information, "AppData directory created");
         }
     }
 
@@ -121,7 +121,7 @@ static class Program
         }
         catch (Exception ex)
         {
-            Logger.Log(LogLevel.Error, $"Fehler beim Initialisieren des Tray-Icons: {ex.Message}");
+            Logger.Log(LogLevel.Error, $"Error initializing tray icon: {ex.Message}");
             trayIcon.Icon = SystemIcons.Application;
         }
     }
@@ -129,9 +129,9 @@ static class Program
     private static void InitializeContextMenu()
     {
         var contextMenu = new ContextMenuStrip();
-        contextMenu.Items.Add("Konfiguration", null, ShowConfig);
-        contextMenu.Items.Add("Log öffnen", null, ShowLog);
-        contextMenu.Items.Add("Beenden", null, ExitApplication);
+        contextMenu.Items.Add("Configuration", null, ShowConfig);
+        contextMenu.Items.Add("Open Log", null, ShowLog);
+        contextMenu.Items.Add("Exit", null, ExitApplication);
         trayIcon.ContextMenuStrip = contextMenu;
     }
 
@@ -174,7 +174,7 @@ static class Program
     private static void ShowNoLogFileMessage()
     {
         MessageBox.Show(
-            "Keine Log-Datei für heute gefunden.",
+            "No log file found for today.",
             "Information",
             MessageBoxButtons.OK,
             MessageBoxIcon.Information);
@@ -182,10 +182,10 @@ static class Program
 
     private static void HandleLogOpenError(Exception ex)
     {
-        Logger.Log(LogLevel.Error, $"Fehler beim Öffnen des Logs: {ex.Message}");
+        Logger.Log(LogLevel.Error, $"Error opening log: {ex.Message}");
         MessageBox.Show(
-            $"Fehler beim Öffnen des Logs: {ex.Message}",
-            "Fehler",
+            $"Error opening log: {ex.Message}",
+            "Error",
             MessageBoxButtons.OK,
             MessageBoxIcon.Error);
     }
@@ -213,7 +213,7 @@ static class Program
     {
         var json = File.ReadAllText(configPath);
         config = JsonSerializer.Deserialize<Config>(json);
-        Logger.Log(LogLevel.Information, "Konfiguration geladen");
+        Logger.Log(LogLevel.Information, "Configuration loaded");
 
         if (config != null && config.AutoStart != StartupManager.StartWithWindows)
         {
@@ -232,7 +232,7 @@ static class Program
 
     private static void HandleConfigLoadError(Exception ex)
     {
-        Logger.Log(LogLevel.Error, $"Fehler beim Laden der Konfiguration: {ex.Message}");
+        Logger.Log(LogLevel.Error, $"Error loading configuration: {ex.Message}");
         ShowConfig(null, EventArgs.Empty);
     }
 
@@ -250,36 +250,93 @@ static class Program
 
     private static void StopExistingSyncService()
     {
-        syncService?.Stop();
+        if (syncService != null)
+        {
+            syncService.Stop();
+            syncService = null;
+        }
     }
 
     private static void CreateAndStartNewSyncService()
     {
-        if (config == null)
-        {
-            Logger.Log(LogLevel.Error, "Cannot start sync service: Configuration is null");
-            return;
-        }
-
         syncService = new SyncService(config);
         syncService.Start();
-        Logger.Log(LogLevel.Information, "Synchronization service started");
+        Logger.Log(LogLevel.Information, "Sync service started");
     }
 
     private static void ShowConfig(object? sender, EventArgs e)
     {
-        using var form = new ConfigForm(configPath);
-        form.Icon = appIcon;
-        if (form.ShowDialog() == DialogResult.OK)
+        try
         {
-            LoadConfig();
+            using var configForm = new ConfigForm(configPath);
+            if (configForm.ShowDialog() == DialogResult.OK)
+            {
+                LoadConfig();
+                StartSyncService();
+            }
         }
+        catch (Exception ex)
+        {
+            HandleConfigFormError(ex);
+        }
+    }
+
+    private static void HandleConfigFormError(Exception ex)
+    {
+        Logger.Log(LogLevel.Error, $"Error in configuration form: {ex.Message}");
+        MessageBox.Show(
+            $"Error in configuration form: {ex.Message}",
+            "Error",
+            MessageBoxButtons.OK,
+            MessageBoxIcon.Error);
+    }
+
+    private static void SaveConfig()
+    {
+        try
+        {
+            if (config == null) return;
+
+            var json = JsonSerializer.Serialize(config, new JsonSerializerOptions
+            {
+                WriteIndented = true
+            });
+            File.WriteAllText(configPath, json);
+            Logger.Log(LogLevel.Information, "Configuration saved");
+
+            if (config.AutoStart != StartupManager.StartWithWindows)
+            {
+                StartupManager.StartWithWindows = config.AutoStart;
+            }
+        }
+        catch (Exception ex)
+        {
+            HandleConfigSaveError(ex);
+        }
+    }
+
+    private static void HandleConfigSaveError(Exception ex)
+    {
+        Logger.Log(LogLevel.Error, $"Error saving configuration: {ex.Message}");
+        MessageBox.Show(
+            $"Error saving configuration: {ex.Message}",
+            "Error",
+            MessageBoxButtons.OK,
+            MessageBoxIcon.Error);
     }
 
     private static void ExitApplication(object? sender, EventArgs e)
     {
-        StopExistingSyncService();
-        trayIcon.Visible = false;
-        Application.Exit();
+        try
+        {
+            StopExistingSyncService();
+            trayIcon.Visible = false;
+            Application.Exit();
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(LogLevel.Error, $"Error during application exit: {ex.Message}");
+            Environment.Exit(1);
+        }
     }
 }

@@ -289,6 +289,10 @@ public class SyncService
                 await ProcessSelectedItems(form.GetSelectedItems());
             }
         }
+        catch (Exception ex)
+        {
+            Logger.Log(LogLevel.Error, $"Error showing sync dialog: {ex.Message}");
+        }
         finally
         {
             isSyncWindowOpen = false;
@@ -301,16 +305,17 @@ public class SyncService
     /// <param name="selectedItems">List of selected items to process</param>
     private async Task ProcessSelectedItems(IEnumerable<dynamic> selectedItems)
     {
-        foreach (var diff in selectedItems)
+        foreach (var item in selectedItems)
         {
             try
             {
-                await EnsureTargetDirectoryExists(diff.Target);
-                await CopyFileAsync(diff.Source, diff.Target);
+                await EnsureTargetDirectoryExists(item.Target);
+                await CopyFileAsync(item.Source, item.Target);
             }
             catch (Exception ex)
             {
-                Logger.Log(LogLevel.Error, $"Error synchronizing {diff.Source}: {ex.Message}");
+                Logger.Log(LogLevel.Error, $"Error processing item: {ex.Message}");
+                // Continue with next item
             }
         }
     }
@@ -321,10 +326,23 @@ public class SyncService
     /// <param name="targetPath">Target file path</param>
     private async Task EnsureTargetDirectoryExists(string targetPath)
     {
-        var targetDir = Path.GetDirectoryName(targetPath);
-        if (targetDir != null && !Directory.Exists(targetDir))
+        try
         {
-            await Task.Run(() => Directory.CreateDirectory(targetDir));
+            var targetDir = Path.GetDirectoryName(targetPath);
+            if (targetDir != null && !Directory.Exists(targetDir))
+            {
+                await Task.Run(() => Directory.CreateDirectory(targetDir));
+            }
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            Logger.Log(LogLevel.Error, $"Access denied when creating directory: {ex.Message}");
+            throw;
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(LogLevel.Error, $"Error creating directory: {ex.Message}");
+            throw;
         }
     }
 
@@ -335,7 +353,31 @@ public class SyncService
     /// <param name="target">Target file path</param>
     private async Task CopyFileAsync(string source, string target)
     {
-        await Task.Run(() => File.Copy(source, target, true));
-        Logger.Log(LogLevel.Execution, $"File synchronized: {source} -> {target}");
+        try
+        {
+            var targetDir = Path.GetDirectoryName(target);
+            if (targetDir != null && !Directory.Exists(targetDir))
+            {
+                Directory.CreateDirectory(targetDir);
+            }
+
+            await Task.Run(() => File.Copy(source, target, true));
+            Logger.Log(LogLevel.Execution, $"File synchronized: {source} -> {target}");
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            Logger.Log(LogLevel.Error, $"Access denied when copying file: {ex.Message}");
+            throw;
+        }
+        catch (IOException ex)
+        {
+            Logger.Log(LogLevel.Error, $"IO error when copying file: {ex.Message}");
+            throw;
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(LogLevel.Error, $"Error copying file: {ex.Message}");
+            throw;
+        }
     }
 }

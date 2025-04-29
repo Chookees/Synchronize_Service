@@ -101,16 +101,22 @@ public static class Logger
         // Additionally write to Windows Event Log
         try
         {
-            using (var eventLog = new System.Diagnostics.EventLog("Application"))
+            if (!System.Diagnostics.EventLog.SourceExists(APP_NAME))
             {
-                eventLog.Source = APP_NAME;
-                eventLog.WriteEntry($"Error during logging: {ex.Message}",
-                    System.Diagnostics.EventLogEntryType.Error);
+                System.Diagnostics.EventLog.CreateEventSource(APP_NAME, "Application");
             }
+
+            using var eventLog = new System.Diagnostics.EventLog("Application")
+            {
+                Source = APP_NAME
+            };
+            eventLog.WriteEntry($"Error during logging: {ex.Message}",
+                System.Diagnostics.EventLogEntryType.Error);
         }
-        catch
+        catch (Exception eventLogEx)
         {
             // If this also fails, we can't do anything more
+            Console.WriteLine($"Error writing to Event Log: {eventLogEx.Message}");
         }
     }
 }
